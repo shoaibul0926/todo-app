@@ -1,0 +1,22 @@
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.filters button {
+  border: 1.5px solid var(--line);
+  background: transparent;
+  border-radius: 99px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.filters button[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}

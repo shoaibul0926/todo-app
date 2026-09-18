@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { toIsoDate } from './domain/due'
 import { seedData } from './domain/seed'
 import { addTask, toggleTask } from './domain/tasks'
-import type { NewTask, Task } from './domain/types'
+import type { Filter, NewTask, Task } from './domain/types'
 import { refocusAfterRender } from './dom'
 import { newId } from './id'
 import type { StorageAdapter } from './storage/adapter'
@@ -16,6 +16,7 @@ export function useTodos(adapter: StorageAdapter) {
   )
   const [tasks, setTasks] = useState<Task[]>(initial.tasks)
   const [focusId] = useState<string | null>(initial.focusId)
+  const [filter, setFilter] = useState<Filter>('all')
   const [settling, setSettling] = useState<ReadonlySet<string>>(new Set())
 
   useEffect(() => {
@@ -47,5 +48,5 @@ export function useTodos(adapter: StorageAdapter) {
     }, SETTLE_MS)
   }
 
-  return { tasks, focusId, settling, add, toggle }
+  return { tasks, focusId, filter, setFilter, settling, add, toggle }
 }
