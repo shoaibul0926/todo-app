@@ -1,0 +1,36 @@
+h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 10vw, 4.4rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.date {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.progress {
+  margin-top: 22px;
+}
+
+.progress p {
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.track {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background: var(--ink);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
