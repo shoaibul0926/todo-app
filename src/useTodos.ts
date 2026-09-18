@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { toIsoDate } from './domain/due'
 import { findFocus, toggleFocus } from './domain/focus'
-import { seedData } from './domain/seed'
 import { addTask, clearCompleted, editTitle, removeTask, restoreCompleted, restoreTask, toggleTask } from './domain/tasks'
 import type { Filter, NewTask, Task } from './domain/types'
 import { refocusAfterRender } from './dom'
 import { newId } from './id'
 import type { ToastData } from './components/Toast'
-import type { StorageAdapter } from './storage/adapter'
+import type { AppData, StorageAdapter } from './storage/adapter'
 
 /** How long a just-ticked task stays put so its strike-through can draw before it moves down. */
 const SETTLE_MS = 900
@@ -16,9 +14,8 @@ const SETTLE_MS = 900
 const TOAST_MS = 6000
 
 export function useTodos(adapter: StorageAdapter) {
-  const [initial] = useState(
-    () => adapter.load() ?? seedData(Date.now(), toIsoDate(new Date()), [newId(), newId(), newId()]),
-  )
+  // A first-time visitor starts with an empty list; every task is one they add themselves.
+  const [initial] = useState<AppData>(() => adapter.load() ?? { tasks: [], focusId: null })
   const [tasks, setTasks] = useState<Task[]>(initial.tasks)
   const [rawFocusId, setFocusId] = useState<string | null>(initial.focusId)
   const [filter, setFilter] = useState<Filter>('all')
