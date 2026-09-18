@@ -4,7 +4,7 @@ import { MAX_TITLE_LENGTH } from '../domain/tasks'
 import type { Task } from '../domain/types'
 import { formatShortDate } from '../format'
 import { IconButton } from './IconButton'
-import { EditIcon, PinIcon } from './icons'
+import { EditIcon, PinIcon, TrashIcon } from './icons'
 
 interface Props {
   task: Task
@@ -14,6 +14,7 @@ interface Props {
   onTogglePin: (id: string) => void
   onStartEdit: (id: string) => void
   onFinishEdit: (id: string, title: string | null) => void
+  onRemove: (id: string) => void
 }
 
 function EditInput({ initial, onFinish }: { initial: string; onFinish: (title: string | null) => void }) {
@@ -54,7 +55,7 @@ function EditInput({ initial, onFinish }: { initial: string; onFinish: (title: s
   )
 }
 
-export function TaskRow({ task, pinned, editing, onToggle, onTogglePin, onStartEdit, onFinishEdit }: Props) {
+export function TaskRow({ task, pinned, editing, onToggle, onTogglePin, onStartEdit, onFinishEdit, onRemove }: Props) {
   const due = dueInfo(task.due, toIsoDate(new Date()))
   const priority = task.priority.charAt(0).toUpperCase() + task.priority.slice(1)
 
@@ -94,6 +95,9 @@ export function TaskRow({ task, pinned, editing, onToggle, onTogglePin, onStartE
         </IconButton>
         <IconButton label="Edit task" data-edit={task.id} onClick={() => onStartEdit(task.id)}>
           <EditIcon />
+        </IconButton>
+        <IconButton label="Delete task" onClick={() => onRemove(task.id)}>
+          <TrashIcon />
         </IconButton>
       </div>
     </li>

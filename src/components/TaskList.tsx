@@ -13,6 +13,7 @@ interface Props {
   onTogglePin: (id: string) => void
   onStartEdit: (id: string) => void
   onFinishEdit: (id: string, title: string | null) => void
+  onRemove: (id: string) => void
 }
 
 export function TaskList({ tasks, total, filter, focusId, editingId, ...handlers }: Props) {

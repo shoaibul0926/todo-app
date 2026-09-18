@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toIsoDate } from './domain/due'
 import { findFocus, toggleFocus } from './domain/focus'
 import { seedData } from './domain/seed'
-import { addTask, editTitle, toggleTask } from './domain/tasks'
+import { addTask, clearCompleted, editTitle, removeTask, restoreCompleted, restoreTask, toggleTask } from './domain/tasks'
 import type { Filter, NewTask, Task } from './domain/types'
 import { refocusAfterRender } from './dom'
 import { newId } from './id'
+import type { ToastData } from './components/Toast'
 import type { StorageAdapter } from './storage/adapter'
 
 /** How long a just-ticked task stays put so its strike-through can draw before it moves down. */
 const SETTLE_MS = 900
+
+/** How long the undo toast stays on screen. */
+const TOAST_MS = 6000
 
 export function useTodos(adapter: StorageAdapter) {
   const [initial] = useState(
@@ -19,6 +23,8 @@ export function useTodos(adapter: StorageAdapter) {
   const [rawFocusId, setFocusId] = useState<string | null>(initial.focusId)
   const [filter, setFilter] = useState<Filter>('all')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [toast, setToast] = useState<ToastData | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
   const [settling, setSettling] = useState<ReadonlySet<string>>(new Set())
 
   const focus = findFocus(tasks, rawFocusId)
@@ -64,5 +70,48 @@ export function useTodos(adapter: StorageAdapter) {
     refocusAfterRender(`[data-edit="${id}"]`)
   }
 
-  return { tasks, focus, editingId, startEdit, finishEdit, focusId, togglePin, filter, setFilter, settling, add, toggle }
+  const dismissToast = () => {
+    window.clearTimeout(toastTimer.current)
+    setToast(null)
+  }
+
+  const showToast = (message: string, undo: () => void) => {
+    window.clearTimeout(toastTimer.current)
+    setToast({ message, undo })
+    toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS)
+  }
+
+  const remove = (id: string) => {
+    const { tasks: next, removed } = removeTask(tasks, id)
+    if (!removed) return
+    setTasks(next)
+    showToast('Task deleted', () => setTasks((list) => restoreTask(list, removed)))
+  }
+
+  const clearDone = () => {
+    const { tasks: next, removed } = clearCompleted(tasks)
+    if (!removed.length) return
+    setTasks(next)
+    const n = removed.length
+    showToast(`${n} ${n === 1 ? 'task' : 'tasks'} cleared`, () => setTasks((list) => restoreCompleted(list, removed)))
+  }
+
+  return {
+    tasks,
+    focus,
+    focusId,
+    filter,
+    setFilter,
+    settling,
+    editingId,
+    toast,
+    add,
+    toggle,
+    togglePin,
+    startEdit,
+    finishEdit,
+    remove,
+    clearDone,
+    dismissToast,
+  }
 }
