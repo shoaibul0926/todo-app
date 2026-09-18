@@ -7,10 +7,12 @@ interface Props {
   tasks: Task[]
   total: number
   filter: Filter
+  focusId: string | null
   onToggle: (id: string) => void
+  onTogglePin: (id: string) => void
 }
 
-export function TaskList({ tasks, total, filter, onToggle }: Props) {
+export function TaskList({ tasks, total, filter, focusId, onToggle, onTogglePin }: Props) {
   if (!tasks.length) {
     const { title, hint } = emptyState(total, filter)
     return (
@@ -28,7 +30,7 @@ export function TaskList({ tasks, total, filter, onToggle }: Props) {
     <div className="list-box">
       <ul>
         {tasks.map((t) => (
-          <TaskRow key={t.id} task={t} onToggle={onToggle} />
+          <TaskRow key={t.id} task={t} pinned={t.id === focusId} onToggle={onToggle} onTogglePin={onTogglePin} />
         ))}
       </ul>
     </div>

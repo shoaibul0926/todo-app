@@ -1,0 +1,59 @@
+.focus {
+  margin-top: 28px;
+  background: var(--hi);
+  color: var(--hi-ink);
+  border-radius: 18px;
+  padding: 20px 22px 22px;
+}
+
+.focus h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.focus-empty {
+  margin: 0;
+  max-width: 44ch;
+  opacity: 0.85;
+}
+
+.focus-title {
+  margin: 0;
+  font-family: 'Bricolage Grotesque', 'DM Sans', system-ui, sans-serif;
+  font-size: clamp(1.4rem, 5vw, 1.8rem);
+  line-height: 1.2;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.focus-title.done {
+  opacity: 0.65;
+}
+
+.focus-note {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+}
+
+.focus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn-dark {
+  background: var(--hi-ink);
+  color: var(--hi);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--hi-ink);
+  color: var(--hi-ink);
+}
+
+.focus :focus-visible {
+  outline-color: var(--hi-ink);
+}

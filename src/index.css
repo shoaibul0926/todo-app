@@ -88,6 +88,36 @@ input {
   padding: clamp(24px, 6vw, 56px) 20px 96px;
 }
 
+.btn {
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* strike-through that draws itself */
+.t {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 58%;
+  background-size: 0% 2px;
+  transition:
+    background-size 0.4s ease,
+    color 0.3s ease,
+    opacity 0.3s ease;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.done .t {
+  background-size: 100% 2px;
+}
+
+.row.done .t {
+  color: var(--muted);
+}
+
 /* visually hidden but available to screen readers */
 .sr {
   position: absolute;

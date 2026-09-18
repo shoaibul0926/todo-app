@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toIsoDate } from './domain/due'
+import { findFocus, toggleFocus } from './domain/focus'
 import { seedData } from './domain/seed'
 import { addTask, toggleTask } from './domain/tasks'
 import type { Filter, NewTask, Task } from './domain/types'
@@ -15,9 +16,12 @@ export function useTodos(adapter: StorageAdapter) {
     () => adapter.load() ?? seedData(Date.now(), toIsoDate(new Date()), [newId(), newId(), newId()]),
   )
   const [tasks, setTasks] = useState<Task[]>(initial.tasks)
-  const [focusId] = useState<string | null>(initial.focusId)
+  const [rawFocusId, setFocusId] = useState<string | null>(initial.focusId)
   const [filter, setFilter] = useState<Filter>('all')
   const [settling, setSettling] = useState<ReadonlySet<string>>(new Set())
+
+  const focus = findFocus(tasks, rawFocusId)
+  const focusId = focus?.id ?? null
 
   useEffect(() => {
     adapter.save({ tasks, focusId })
@@ -48,5 +52,7 @@ export function useTodos(adapter: StorageAdapter) {
     }, SETTLE_MS)
   }
 
-  return { tasks, focusId, filter, setFilter, settling, add, toggle }
+  const togglePin = (id: string) => setFocusId(toggleFocus(focusId, id))
+
+  return { tasks, focus, focusId, togglePin, filter, setFilter, settling, add, toggle }
 }

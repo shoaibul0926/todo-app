@@ -111,6 +111,41 @@ ul {
   font-weight: 600;
 }
 
+.chip-focus {
+  background: var(--hi);
+  color: var(--hi-ink);
+  padding: 1px 9px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 2px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.icon-btn.on {
+  background: var(--hi);
+  color: var(--hi-ink);
+}
+
 .empty {
   padding: 40px 24px;
   text-align: center;
@@ -122,28 +157,6 @@ ul {
   color: var(--ink);
   font-size: 1.1rem;
   margin-bottom: 4px;
-}
-
-/* strike-through that draws itself */
-.t {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-repeat: no-repeat;
-  background-position: 0 58%;
-  background-size: 0% 2px;
-  transition:
-    background-size 0.4s ease,
-    color 0.3s ease,
-    opacity 0.3s ease;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-
-.done .t {
-  background-size: 100% 2px;
-}
-
-.row.done .t {
-  color: var(--muted);
 }
 
 @media (max-width: 480px) {
