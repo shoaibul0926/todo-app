@@ -1,0 +1,9 @@
+{
+  "appId": "com.shoaibul.todoapp",
+  "appName": "Today",
+  "webDir": "dist",
+  "backgroundColor": "#1b2340",
+  "android": {
+    "backgroundColor": "#1b2340"
+  }
+}
