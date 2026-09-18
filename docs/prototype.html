@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today: to-do list</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDF0F7; --surface:#FFFFFF; --ink:#1B2340; --muted:#5B6485; --line:#D9DEEB;
+    --hi:#FFD84D; --hi-ink:#1B2340;
+    --high:#D93A40; --med:#4A57D0; --low:#7F89AB; --done:#2A9484; --ring:#4A57D0;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#12172B; --surface:#1B2240; --ink:#EDF0F7; --muted:#A0A9C9; --line:#2D365C;
+      --high:#FF6E73; --med:#98A2FF; --low:#8791B3; --done:#4CC2AE; --ring:#98A2FF;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#12172B; --surface:#1B2240; --ink:#EDF0F7; --muted:#A0A9C9; --line:#2D365C;
+    --high:#FF6E73; --med:#98A2FF; --low:#8791B3; --done:#4CC2AE; --ring:#98A2FF;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
+    font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    font-size:16px; line-height:1.45;
+  }
+  h1,h2,.display{font-family:'Bricolage Grotesque','DM Sans',system-ui,sans-serif}
+  button,input{font:inherit;color:inherit}
+  :focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+
+  .wrap{max-width:660px;margin:0 auto;padding:clamp(24px,6vw,56px) 20px 96px}
+
+  /* header */
+  h1{margin:0;font-size:clamp(2.8rem,10vw,4.4rem);line-height:.95;font-weight:800;letter-spacing:-.03em}
+  .date{margin:8px 0 0;color:var(--muted);font-size:1.05rem}
+  .progress{margin-top:22px}
+  .progress p{margin:0 0 8px;font-weight:500}
+  .track{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+  .fill{height:100%;width:0;background:var(--ink);border-radius:99px;transition:width .4s ease}
+
+  /* focus card */
+  .focus{margin-top:28px;background:var(--hi);color:var(--hi-ink);border-radius:18px;padding:20px 22px 22px}
+  .focus h2{margin:0 0 8px;font-size:1rem;font-weight:700}
+  .focus-empty{margin:0;max-width:44ch;opacity:.85}
+  .focus-title{margin:0;font-family:'Bricolage Grotesque','DM Sans',system-ui,sans-serif;font-size:clamp(1.4rem,5vw,1.8rem);line-height:1.2;font-weight:700;overflow-wrap:anywhere}
+  .focus-note{margin:10px 0 0;font-size:.95rem}
+  .focus-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .btn{border:1.5px solid transparent;border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer}
+  .btn-dark{background:var(--hi-ink);color:var(--hi)}
+  .btn-ghost{background:transparent;border-color:var(--hi-ink);color:var(--hi-ink)}
+  .focus :focus-visible{outline-color:var(--hi-ink)}
+
+  /* strike-through that draws itself */
+  .t{
+    background-image:linear-gradient(currentColor,currentColor);
+    background-repeat:no-repeat; background-position:0 58%; background-size:0% 2px;
+    transition:background-size .4s ease,color .3s ease,opacity .3s ease;
+    -webkit-box-decoration-break:clone; box-decoration-break:clone;
+  }
+  .done .t{background-size:100% 2px}
+  .row.done .t{color:var(--muted)}
+  .focus-title.done{opacity:.65}
+
+  /* add form */
+  .add{margin-top:28px}
+  .add input[type=text]{
+    width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid var(--line);
+    background:var(--surface);font-size:1.05rem;
+  }
+  .add input[type=text]::placeholder{color:var(--muted)}
+  .options{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px}
+  fieldset{border:0;margin:0;padding:0;min-width:0}
+  .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+  .seg label{position:relative;cursor:pointer}
+  .seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+  .seg span{display:block;padding:8px 12px;font-size:.92rem;font-weight:500}
+  .seg input:checked + span{background:var(--ink);color:var(--paper)}
+  .seg input:focus-visible + span{outline:3px solid var(--ring);outline-offset:-3px}
+  .date-input{
+    padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);
+    font-size:.92rem;min-height:38px;
+  }
+  .btn-add{margin-left:auto;background:var(--ink);color:var(--paper);padding:10px 22px}
+  .hint{margin:8px 2px 0;color:var(--high);font-size:.9rem;min-height:1.3em}
+
+  /* filters */
+  .filters{display:flex;gap:6px;margin-top:20px}
+  .filters button{
+    border:1.5px solid var(--line);background:transparent;border-radius:99px;padding:6px 14px;
+    cursor:pointer;font-size:.92rem;font-weight:500;color:var(--muted);
+  }
+  .filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+  /* list */
+  .list-box{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  ul{list-style:none;margin:0;padding:0}
+  .p-high{--pc:var(--high)} .p-medium{--pc:var(--med)} .p-low{--pc:var(--low)}
+  .row{
+    position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;
+    padding:14px 10px 14px 20px;border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:0}
+  .row::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--pc);transition:opacity .3s}
+  .row.done::before{opacity:.35}
+  .row input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;width:22px;height:22px;margin:2px 0 0;border-radius:50%;
+    border:2px solid var(--muted);cursor:pointer;background-color:transparent;background-repeat:no-repeat;background-position:center;background-size:14px;
+    transition:background-color .2s,border-color .2s;
+  }
+  .row input[type=checkbox]:checked{
+    background-color:var(--done);border-color:var(--done);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  }
+  .body{min-width:0}
+  .title{overflow-wrap:anywhere;font-size:1.05rem;font-weight:500;cursor:text}
+  .edit-input{
+    width:100%;padding:6px 10px;border-radius:8px;border:1.5px solid var(--ring);
+    background:var(--surface);font-size:1.05rem;
+  }
+  .meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:4px;font-size:.84rem;color:var(--muted)}
+  .meta .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pc);margin-right:6px}
+  .overdue{color:var(--high);font-weight:600}
+  .chip-focus{background:var(--hi);color:var(--hi-ink);padding:1px 9px;border-radius:99px;font-weight:600}
+  .actions{display:flex;gap:2px}
+  .icon-btn{
+    width:36px;height:36px;display:grid;place-items:center;border:0;background:transparent;
+    color:var(--muted);border-radius:9px;cursor:pointer;
+  }
+  .icon-btn:hover{background:var(--line);color:var(--ink)}
+  .icon-btn.on{background:var(--hi);color:var(--hi-ink)}
+  .empty{padding:40px 24px;text-align:center;color:var(--muted)}
+  .empty strong{display:block;color:var(--ink);font-size:1.1rem;margin-bottom:4px}
+
+  /* footer + toast */
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;color:var(--muted);font-size:.92rem}
+  .link-btn{border:0;background:none;padding:6px 2px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-weight:500}
+  .link-btn:disabled{color:var(--muted);text-decoration:none;cursor:default;opacity:.6}
+  .toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:10;
+    display:flex;align-items:center;gap:16px;background:var(--ink);color:var(--paper);
+    padding:12px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100vw - 32px);
+  }
+  .toast button{border:0;background:none;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .toast :focus-visible{outline-color:var(--hi)}
+
+  @media (max-width:480px){
+    .btn-add{flex:1 0 100%;margin-left:0}
+    .row{padding-left:18px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1 id="weekday"></h1>
+    <p class="date" id="fullDate"></p>
+    <div class="progress">
+      <p id="summary" aria-live="polite"></p>
+      <div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div>
+    </div>
+  </header>
+
+  <section class="focus" aria-labelledby="focusHeading">
+    <h2 id="focusHeading">Focus</h2>
+    <div id="focusBody"></div>
+  </section>
+
+  <form class="add" id="addForm" autocomplete="off" novalidate>
+    <label for="newTitle" class="sr" style="position:absolute;left:-9999px">New task</label>
+    <input type="text" id="newTitle" placeholder="Add a task" maxlength="200">
+    <div class="options">
+      <fieldset>
+        <legend style="position:absolute;left:-9999px">Priority</legend>
+        <div class="seg">
+          <label><input type="radio" name="priority" value="low"><span>Low</span></label>
+          <label><input type="radio" name="priority" value="medium" checked><span>Medium</span></label>
+          <label><input type="radio" name="priority" value="high"><span>High</span></label>
+        </div>
+      </fieldset>
+      <label for="newDue" style="position:absolute;left:-9999px">Due date</label>
+      <input type="date" id="newDue" class="date-input">
+      <button type="submit" class="btn btn-add">Add task</button>
+    </div>
+    <p class="hint" id="hint" role="status"></p>
+  </form>
+
+  <div class="filters" role="group" aria-label="Filter tasks">
+    <button type="button" data-filter="all" aria-pressed="true">All</button>
+    <button type="button" data-filter="active" aria-pressed="false">To do</button>
+    <button type="button" data-filter="done" aria-pressed="false">Done</button>
+  </div>
+
+  <div class="list-box"><ul id="list"></ul></div>
+
+  <div class="foot">
+    <span id="count"></span>
+    <button type="button" class="link-btn" id="clearDone">Clear completed</button>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" hidden>
+  <span id="toastMsg"></span>
+  <button type="button" id="toastAction">Undo</button>
+</div>
+
+<script>
+(function(){
+  var KEY = 'today-todo-v1';
+  var $ = function(s){ return document.querySelector(s); };
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  var iso = function(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+  var uid = function(){
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
+  };
+
+  var ICONS = {
+    pin:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>',
+    edit:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>'
+  };
+
+  var state = { tasks:[], focusId:null, filter:'all', editingId:null };
+  var recentlyDone = {};   // ids finishing their strike-through before moving down
+  var animQueue = [];
+  var lastDeleted = null, toastTimer = null;
+
+  /* ---------- storage ---------- */
+  function load(){
+    var raw = null;
+    try { raw = localStorage.getItem(KEY); } catch(e){}
+    if(raw){
+      try{
+        var d = JSON.parse(raw);
+        if(d && Array.isArray(d.tasks)){ state.tasks = d.tasks; state.focusId = d.focusId || null; return; }
+      }catch(e){}
+    }
+    var now = Date.now(), today = iso(new Date());
+    state.tasks = [
+      { id:uid(), title:'Tick this one off to see it struck through', priority:'high', due:today, done:false, created:now+2 },
+      { id:uid(), title:'Set a priority and due date when you add a task', priority:'low', due:'', done:false, created:now+1 },
+      { id:uid(), title:'Pin a task to Focus with the pin icon', priority:'medium', due:'', done:false, created:now }
+    ];
+    state.focusId = state.tasks[2].id;
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify({ tasks:state.tasks, focusId:state.focusId })); } catch(e){}
+  }
+
+  /* ---------- helpers ---------- */
+  function byId(id){ return state.tasks.find(function(t){ return t.id === id; }); }
+  function dueInfo(due){
+    if(!due) return null;
+    var today = iso(new Date());
+    var tom = new Date(); tom.setDate(tom.getDate()+1);
+    var parts = due.split('-');
+    var pretty = new Date(+parts[0], +parts[1]-1, +parts[2]).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+    if(due === today) return { text:'Due today', cls:'' };
+    if(due === iso(tom)) return { text:'Due tomorrow', cls:'' };
+    if(due < today) return { text:'Overdue, '+pretty, cls:'overdue' };
+    return { text:'Due '+pretty, cls:'' };
+  }
+  function el(tag, cls, text){
+    var n = document.createElement(tag);
+    if(cls) n.className = cls;
+    if(text != null) n.textContent = text;
+    return n;
+  }
+  function iconBtn(label, icon, on, handler, dataKey, id){
+    var b = el('button','icon-btn'+(on?' on':''));
+    b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
+    b.innerHTML = icon;
+    if(dataKey) b.setAttribute('data-'+dataKey, id);
+    b.addEventListener('click', handler);
+    return b;
+  }
+  function titleSpan(t, container){
+    var s = el('span','t',t.title);
+    if(t.done){
+      if(recentlyDone[t.id]){ animQueue.push(container); }
+      else container.classList.add('done');
+    }
+    return s;
+  }
+
+  /* ---------- actions ---------- */
+  function addTask(title, priority, due){
+    state.tasks.unshift({ id:uid(), title:title, priority:priority, due:due||'', done:false, created:Date.now() });
+    render();
+  }
+  function toggle(id){
+    var t = byId(id); if(!t) return;
+    t.done = !t.done;
+    if(t.done){
+      t.doneAt = Date.now();
+      recentlyDone[id] = true;
+      setTimeout(function(){
+        var a = document.activeElement;
+        var keep = a && a.getAttribute && a.getAttribute('data-cb') === id;
+        delete recentlyDone[id];
+        render(keep ? '[data-cb="'+id+'"]' : null);
+      }, 900);
+    } else { delete recentlyDone[id]; }
+    render('[data-cb="'+id+'"]');
+  }
+  function togglePin(id){
+    state.focusId = (state.focusId === id) ? null : id;
+    render('[data-pin="'+id+'"]');
+  }
+  function remove(id){
+    var idx = state.tasks.findIndex(function(t){ return t.id === id; });
+    if(idx < 0) return;
+    var task = state.tasks[idx];
+    lastDeleted = { task:task, idx:idx, wasFocus:state.focusId === id };
+    state.tasks.splice(idx,1);
+    if(lastDeleted.wasFocus) state.focusId = null;
+    render();
+    showToast('Task deleted', function(){
+      if(!lastDeleted) return;
+      state.tasks.splice(Math.min(lastDeleted.idx, state.tasks.length), 0, lastDeleted.task);
+      if(lastDeleted.wasFocus) state.focusId = lastDeleted.task.id;
+      lastDeleted = null;
+      render();
+    });
+  }
+  function clearDone(){
+    var removed = state.tasks.filter(function(t){ return t.done; });
+    if(!removed.length) return;
+    state.tasks = state.tasks.filter(function(t){ return !t.done; });
+    if(state.focusId && !byId(state.focusId)) state.focusId = null;
+    render();
+    showToast(removed.length+(removed.length===1?' task':' tasks')+' cleared', function(){
+      state.tasks = state.tasks.concat(removed);
+      render();
+    });
+  }
+  function showToast(msg, undoFn){
+    var toast = $('#toast');
+    $('#toastMsg').textContent = msg;
+    toast.hidden = false;
+    var act = $('#toastAction');
+    act.onclick = function(){ undoFn(); hideToast(); };
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 6000);
+  }
+  function hideToast(){ $('#toast').hidden = true; lastDeleted = null; clearTimeout(toastTimer); }
+
+  /* ---------- render ---------- */
+  function renderHeader(){
+    var total = state.tasks.length;
+    var done = state.tasks.filter(function(t){ return t.done; }).length;
+    var left = total - done;
+    var msg;
+    if(!total) msg = 'Nothing on your list yet.';
+    else if(!left) msg = 'All done. Nice work.';
+    else msg = left+(left===1?' task':' tasks')+' left, '+done+' done';
+    $('#summary').textContent = msg;
+    $('#fill').style.width = total ? Math.round(done/total*100)+'%' : '0%';
+    $('#count').textContent = total ? total+(total===1?' task in total':' tasks in total') : '';
+    $('#clearDone').disabled = done === 0;
+  }
+
+  function renderFocus(){
+    var box = $('#focusBody'); box.textContent = '';
+    var t = byId(state.focusId);
+    if(!t){
+      box.appendChild(el('p','focus-empty','Choose the one task that matters most. Tap the pin on any task to put it here.'));
+      return;
+    }
+    var p = el('p','focus-title');
+    p.appendChild(titleSpan(t, p));
+    box.appendChild(p);
+    if(t.done) box.appendChild(el('p','focus-note','Done. Pin your next focus from the list.'));
+    var actions = el('div','focus-actions');
+    var doneBtn = el('button','btn btn-dark', t.done ? 'Mark not done' : 'Mark done');
+    doneBtn.type = 'button';
+    doneBtn.setAttribute('data-focus-done','1');
+    doneBtn.addEventListener('click', function(){ toggle(t.id); });
+    var unpin = el('button','btn btn-ghost','Unpin');
+    unpin.type = 'button';
+    unpin.addEventListener('click', function(){ state.focusId = null; render(); });
+    actions.appendChild(doneBtn); actions.appendChild(unpin);
+    box.appendChild(actions);
+  }
+
+  function visibleTasks(){
+    var list = state.tasks.filter(function(t){
+      if(state.filter === 'active') return !t.done || recentlyDone[t.id];
+      if(state.filter === 'done') return t.done;
+      return true;
+    });
+    var open = list.filter(function(t){ return !t.done || recentlyDone[t.id]; })
+      .sort(function(a,b){ return b.created - a.created; });
+    var closed = list.filter(function(t){ return t.done && !recentlyDone[t.id]; })
+      .sort(function(a,b){ return (b.doneAt||0) - (a.doneAt||0); });
+    return open.concat(closed);
+  }
+
+  function buildRow(t){
+    var li = el('li','row p-'+t.priority);
+    li.setAttribute('data-id', t.id);
+
+    var cb = el('input'); cb.type = 'checkbox'; cb.checked = t.done;
+    cb.setAttribute('data-cb', t.id);
+    cb.setAttribute('aria-label', (t.done ? 'Mark not done: ' : 'Mark done: ') + t.title);
+    cb.addEventListener('change', function(){ toggle(t.id); });
+    li.appendChild(cb);
+
+    var body = el('div','body');
+    if(state.editingId === t.id){
+      var input = el('input','edit-input'); input.type = 'text'; input.value = t.title; input.maxLength = 200;
+      input.setAttribute('aria-label','Edit task');
+      var finished = false;
+      var finish = function(saveIt){
+        if(finished) return; finished = true;
+        var v = input.value.trim();
+        if(saveIt && v) t.title = v;
+        state.editingId = null;
+        render('[data-edit="'+t.id+'"]');
+      };
+      input.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); finish(true); }
+        if(e.key === 'Escape'){ e.preventDefault(); finish(false); }
+      });
+      input.addEventListener('blur', function(){ finish(true); });
+      body.appendChild(input);
+      setTimeout(function(){ input.focus(); input.select(); }, 0);
+    } else {
+      var title = el('div','title');
+      title.appendChild(titleSpan(t, li));
+      title.addEventListener('dblclick', function(){ state.editingId = t.id; render(); });
+      body.appendChild(title);
+    }
+
+    var meta = el('div','meta');
+    var pr = el('span'); var dot = el('span','dot'); pr.appendChild(dot);
+    pr.appendChild(document.createTextNode(t.priority.charAt(0).toUpperCase()+t.priority.slice(1)));
+    meta.appendChild(pr);
+    var d = dueInfo(t.due);
+    if(d && !t.done){ meta.appendChild(el('span', d.cls, d.text)); }
+    else if(d && t.done){ meta.appendChild(el('span','', d.text.replace('Overdue, ','Was due '))); }
+    if(state.focusId === t.id) meta.appendChild(el('span','chip-focus','Focus'));
+    body.appendChild(meta);
+    li.appendChild(body);
+
+    var actions = el('div','actions');
+    var pinned = state.focusId === t.id;
+    actions.appendChild(iconBtn(pinned ? 'Unpin from Focus' : 'Pin to Focus', ICONS.pin, pinned, function(){ togglePin(t.id); }, 'pin', t.id));
+    actions.appendChild(iconBtn('Edit task', ICONS.edit, false, function(){ state.editingId = t.id; render(); }, 'edit', t.id));
+    actions.appendChild(iconBtn('Delete task', ICONS.trash, false, function(){ remove(t.id); }, 'del', t.id));
+    li.appendChild(actions);
+    return li;
+  }
+
+  function renderList(){
+    var ul = $('#list'); ul.textContent = '';
+    var items = visibleTasks();
+    if(!items.length){
+      var li = el('li','empty');
+      var msg, sub;
+      if(!state.tasks.length){ msg = 'Your list is empty'; sub = 'Type a task above and press Enter.'; }
+      else if(state.filter === 'done'){ msg = 'Nothing finished yet'; sub = 'Tick a task and it will show up here.'; }
+      else { msg = 'Nothing left to do'; sub = 'Add a new task or enjoy the break.'; }
+      li.appendChild(el('strong','',msg)); li.appendChild(document.createTextNode(sub));
+      ul.appendChild(li);
+      return;
+    }
+    items.forEach(function(t){ ul.appendChild(buildRow(t)); });
+  }
+
+  function renderFilters(){
+    document.querySelectorAll('[data-filter]').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === state.filter));
+    });
+  }
+
+  function render(refocusSelector){
+    animQueue = [];
+    renderHeader(); renderFocus(); renderFilters(); renderList();
+    save();
+    if(animQueue.length){
+      var q = animQueue;
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        q.forEach(function(n){ n.classList.add('done'); });
+      }); });
+    }
+    if(refocusSelector){
+      var n = document.querySelector(refocusSelector);
+      if(n) n.focus();
+    }
+  }
+
+  /* ---------- wiring ---------- */
+  var now = new Date();
+  $('#weekday').textContent = now.toLocaleDateString(undefined,{weekday:'long'});
+  $('#fullDate').textContent = now.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'});
+  $('#newDue').min = iso(now);
+
+  $('#addForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var input = $('#newTitle');
+    var title = input.value.trim();
+    var hint = $('#hint');
+    if(!title){
+      hint.textContent = 'Type a task first.';
+      input.focus();
+      return;
+    }
+    hint.textContent = '';
+    var priority = document.querySelector('input[name="priority"]:checked').value;
+    addTask(title, priority, $('#newDue').value);
+    input.value = ''; $('#newDue').value = '';
+    document.querySelector('input[name="priority"][value="medium"]').checked = true;
+    input.focus();
+  });
+  $('#newTitle').addEventListener('input', function(){ $('#hint').textContent = ''; });
+
+  document.querySelectorAll('[data-filter]').forEach(function(b){
+    b.addEventListener('click', function(){ state.filter = b.getAttribute('data-filter'); render(); });
+  });
+  $('#clearDone').addEventListener('click', clearDone);
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
