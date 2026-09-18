@@ -8,11 +8,14 @@ interface Props {
   total: number
   filter: Filter
   focusId: string | null
+  editingId: string | null
   onToggle: (id: string) => void
   onTogglePin: (id: string) => void
+  onStartEdit: (id: string) => void
+  onFinishEdit: (id: string, title: string | null) => void
 }
 
-export function TaskList({ tasks, total, filter, focusId, onToggle, onTogglePin }: Props) {
+export function TaskList({ tasks, total, filter, focusId, editingId, ...handlers }: Props) {
   if (!tasks.length) {
     const { title, hint } = emptyState(total, filter)
     return (
@@ -30,7 +33,7 @@ export function TaskList({ tasks, total, filter, focusId, onToggle, onTogglePin 
     <div className="list-box">
       <ul>
         {tasks.map((t) => (
-          <TaskRow key={t.id} task={t} pinned={t.id === focusId} onToggle={onToggle} onTogglePin={onTogglePin} />
+          <TaskRow key={t.id} task={t} pinned={t.id === focusId} editing={t.id === editingId} {...handlers} />
         ))}
       </ul>
     </div>

@@ -10,7 +10,8 @@ import type { StorageAdapter } from './storage/adapter'
 import { useTodos } from './useTodos'
 
 export default function App({ adapter }: { adapter: StorageAdapter }) {
-  const { tasks, focus, focusId, togglePin, filter, setFilter, settling, add, toggle } = useTodos(adapter)
+  const { tasks, focus, focusId, editingId, startEdit, finishEdit, togglePin, filter, setFilter, settling, add, toggle } =
+    useTodos(adapter)
   const p = progress(tasks)
   return (
     <main className="wrap">
@@ -23,8 +24,11 @@ export default function App({ adapter }: { adapter: StorageAdapter }) {
         total={tasks.length}
         filter={filter}
         focusId={focusId}
+        editingId={editingId}
         onToggle={toggle}
         onTogglePin={togglePin}
+        onStartEdit={startEdit}
+        onFinishEdit={finishEdit}
       />
       <Footer progress={p} />
     </main>

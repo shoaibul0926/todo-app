@@ -164,3 +164,12 @@ ul {
     padding-left: 18px;
   }
 }
+
+.edit-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--ring);
+  background: var(--surface);
+  font-size: 1.05rem;
+}

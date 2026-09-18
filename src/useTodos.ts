@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { toIsoDate } from './domain/due'
 import { findFocus, toggleFocus } from './domain/focus'
 import { seedData } from './domain/seed'
-import { addTask, toggleTask } from './domain/tasks'
+import { addTask, editTitle, toggleTask } from './domain/tasks'
 import type { Filter, NewTask, Task } from './domain/types'
 import { refocusAfterRender } from './dom'
 import { newId } from './id'
@@ -18,6 +18,7 @@ export function useTodos(adapter: StorageAdapter) {
   const [tasks, setTasks] = useState<Task[]>(initial.tasks)
   const [rawFocusId, setFocusId] = useState<string | null>(initial.focusId)
   const [filter, setFilter] = useState<Filter>('all')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [settling, setSettling] = useState<ReadonlySet<string>>(new Set())
 
   const focus = findFocus(tasks, rawFocusId)
@@ -54,5 +55,14 @@ export function useTodos(adapter: StorageAdapter) {
 
   const togglePin = (id: string) => setFocusId(toggleFocus(focusId, id))
 
-  return { tasks, focus, focusId, togglePin, filter, setFilter, settling, add, toggle }
+  const startEdit = (id: string) => setEditingId(id)
+
+  /** Ends editing. A null title cancels; otherwise the task is renamed (blank titles are ignored). */
+  const finishEdit = (id: string, title: string | null) => {
+    if (title !== null) setTasks((list) => editTitle(list, id, title))
+    setEditingId(null)
+    refocusAfterRender(`[data-edit="${id}"]`)
+  }
+
+  return { tasks, focus, editingId, startEdit, finishEdit, focusId, togglePin, filter, setFilter, settling, add, toggle }
 }
