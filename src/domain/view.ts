@@ -16,3 +16,10 @@ export function visibleTasks(tasks: Task[], filter: Filter, settling: ReadonlySe
   const closed = shown.filter((t) => !isOpen(t)).sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0))
   return [...open, ...closed]
 }
+
+/** Message for an empty list: nothing added yet, nothing finished (Done filter), or nothing open. */
+export function emptyState(total: number, filter: Filter): { title: string; hint: string } {
+  if (!total) return { title: 'Your list is empty', hint: 'Type a task above and press Enter.' }
+  if (filter === 'done') return { title: 'Nothing finished yet', hint: 'Tick a task and it will show up here.' }
+  return { title: 'Nothing left to do', hint: 'Add a new task or enjoy the break.' }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { visibleTasks } from './view'
+import { emptyState, visibleTasks } from './view'
 import type { Task } from './types'
 
 const task = (id: string, over: Partial<Task> = {}): Task => ({
@@ -34,5 +34,19 @@ describe('visibleTasks', () => {
     const copy = [...list]
     visibleTasks(list, 'all')
     expect(list).toEqual(copy)
+  })
+})
+
+describe('emptyState', () => {
+  it('prompts for a first task when the list is empty', () => {
+    expect(emptyState(0, 'all').title).toBe('Your list is empty')
+    expect(emptyState(0, 'done').title).toBe('Your list is empty')
+  })
+  it('explains an empty Done filter', () => {
+    expect(emptyState(3, 'done').title).toBe('Nothing finished yet')
+  })
+  it('says nothing is left otherwise', () => {
+    expect(emptyState(3, 'active').title).toBe('Nothing left to do')
+    expect(emptyState(3, 'all').title).toBe('Nothing left to do')
   })
 })
